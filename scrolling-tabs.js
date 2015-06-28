@@ -526,9 +526,8 @@
         elementsHandler.refreshAllElementSizes();
         scrollMovement.scrollToActiveTab();
       }, 100);
+      return elementsHandler;
     };
-   
-    
   }(ScrollingTabsControl.prototype));
   
   
@@ -590,17 +589,28 @@
   /* ********************************************************
    * scrolling-tabs-wrapper Directive
    * ********************************************************/
-  function scrollingTabsWrapperDirective($timeout) {
+  function scrollingTabsWrapperDirective($timeout, $window) {
       // ------------ Directive Object ---------------------------
       return {
         restrict: 'A',
         template: scrollingTabsWrapperTemplate,
         transclude: true,
         replace: true,
+        scope: {
+          tabWatch: '='
+        },
         link: function(scope, element, attrs) {
           var scrollingTabsControl = new ScrollingTabsControl(element, $timeout);
 
-          scrollingTabsControl.initTabs(true); // true -> wrapper directive
+          var elementsHandler = scrollingTabsControl.initTabs(true); // true -> wrapper directive
+          
+          scope.$watch('tabWatch', function(n,o) {
+            if (n!==o) {
+              $timeout(function() {
+                elementsHandler.refreshAllElementSizes(true);
+              }, 100);
+            }
+          });
         }
       };
   
@@ -608,7 +618,7 @@
 
 
   scrollingTabsDirective.$inject = ['$timeout', '$sce'];
-  scrollingTabsWrapperDirective.$inject = ['$timeout'];
+  scrollingTabsWrapperDirective.$inject = ['$timeout', '$window'];
 
   scrollingTabsModule.directive('scrollingTabs', scrollingTabsDirective);
   scrollingTabsModule.directive('scrollingTabsWrapper', scrollingTabsWrapperDirective);
